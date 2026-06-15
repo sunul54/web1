@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>1호선 빌런 나우 얼티밋</title>
+    <style>
+        :root {
+            --line1-color: #003da5;
+            --bg-color: #f8fafc;
+            --card-color: #ffffff;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --safe-color: #10b981;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color); margin: 0; padding: 0; color: var(--text-main);
+        }
+
+        /* 헤더 */
+        .app-header {
+            position: fixed; top: 0; left: 0; right: 0; height: 56px;
+            background-color: var(--line1-color); color: white;
+            display: flex; align-items: center; justify-content: space-between; padding: 0 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); z-index: 100;
+        }
+        .app-header h1 { margin: 0; font-size: 18px; font-weight: bold; }
+        .emergency-btn {
+            background-color: var(--danger-color); color: white; border: none;
+            padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer;
+        }
+
+        /* 메인 컨텐츠 영역 */
+        .app-content { padding-top: 72px; padding-bottom: 80px; max-width: 500px; margin: 0 auto; padding-left: 16px; padding-right: 16px; }
+
+        /* 탭 화면 제어 */
+        .app-page { display: none; }
+        .app-page.active { display: block; }
+
+        .app-card { background: var(--card-color); border-radius: 16px; padding: 16px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03); margin-bottom: 16px; }
+        .section-title { font-size: 16px; font-weight: 700; margin: 10px 0 12px 4px; display: flex; justify-content: space-between; }
+
+        /* 검색창 */
+        .search-bar { width: 100%; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 14px; margin-bottom: 16px; outline: none; background: #fff; }
+
+        /* 인풋 폼 구조 */
+        .input-row { display: flex; gap: 10px; margin-bottom: 12px; }
+        .input-group { flex: 1; margin-bottom: 12px; }
+        .input-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-sub); margin-bottom: 4px; }
+        .input-group input, .input-group select, .input-group textarea {
+            width: 100%; border: 1px solid #e2e8f0; background-color: #f1f5f9;
+            border-radius: 10px; padding: 12px; font-size: 14px; outline: none;
+        }
+        .input-group textarea { height: 80px; resize: none; }
+
+        /* 사진 영역 */
+        .photo-upload-zone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 14px; text-align: center; cursor: pointer; background-color: #f8fafc; font-size: 13px; color: #64748b; margin-bottom: 16px; }
+        .img-preview-box { width: 100%; border-radius: 10px; overflow: hidden; margin-top: 10px; display: none; }
+        .img-preview-box img { width: 100%; display: block; }
+        .submit-btn { background-color: var(--line1-color); color: white; border: none; width: 100%; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; }
+
+        /* 지하철 칸 시각화 (기능 2) */
+        .train-visual { display: flex; gap: 4px; background: #e2e8f0; padding: 6px; border-radius: 8px; margin: 8px 0; }
+        .train-car { flex: 1; text-align: center; font-size: 10px; background: #fff; padding: 4px 0; border-radius: 4px; color: #94a3b8; font-weight: bold; }
+        .train-car.active { background: var(--danger-color); color: white; animation: blink 1s infinite alternate; }
+        @keyframes blink { from { opacity: 0.6; } to { opacity: 1; } }
+
+        /* 피드 카드 스타일 */
+        .feed-item { background: var(--card-color); border-radius: 16px; padding: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); margin-bottom: 12px; border: 1px solid #e2e8f0; border-left: 6px solid var(--warning-color); }
+        .feed-item.level-danger { border-left-color: var(--danger-color); }
+        .feed-meta { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px; }
+        .badge-station { background-color: #e1e7f5; color: var(--line1-color); font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+        .feed-tag { font-size: 15px; font-weight: 700; color: #334155; margin-bottom: 6px; }
+        .feed-text { font-size: 14px; line-height: 1.45; color: #475569; }
+        .feed-img { width: 100%; border-radius: 10px; margin-top: 10px; overflow: hidden; }
+        .feed-img img { width: 100%; display: block; }
+
+        /* 실시간 위험도 투표바 (기능 1) */
+        .vote-box { margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9; display: flex; gap: 8px; }
+        .vote-btn { flex: 1; background: #f1f5f9; border: none; padding: 8px; border-radius: 8px; font-size: 12px; font-weight: 600; color: #64748b; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 4px; }
+        .vote-btn.warn-act { background-color: #fef3c7; color: #d97706; }
+        .vote-btn.dang-act { background-color: #fee2e2; color: #dc2626; }
+
+        /* 하단 내비바 */
+        .app-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background-color: white; display: flex; border-top: 1px solid #e2e8f0; z-index: 100; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #94a3b8; font-size: 10px; font-weight: 600; cursor: pointer; }
+        .nav-item.active { color: var(--line1-color); }
+        .nav-icon { font-size: 20px; margin-bottom: 2px; }
+    </style>
+</head>
+<body>
+
+    <header class="app-header">
+        <h1>1호선 빌런 NOW</h1>
+        <button class="emergency-btn" onclick="triggerEmergency()">🚨 112신고</button>
+    </header>
+
+    <main class="app-content">
+        
+        <div id="pageTimeline" class="app-page active">
+            <input type="text" class="search-bar" id="searchBar" placeholder="🔍 내릴 역 이름을 검색해보세요...">
+            <div class="section-title">
+                <span>⚡️ 실시간 위험 타임라인</span>
+                <span style="font-size: 12px; color: var(--line1-color);" id="totalCount">제보 0건</span>
+            </div>
+            <section id="appFeed"></section>
+        </div>
+
+        <div id="pageReport" class="app-page">
+            <section class="app-card">
+                <div class="section-title" style="margin:0 0 16px 0;">✍️ 실시간 상황 제보하기</div>
+                <form id="appForm">
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>발견 역 이름</label>
+                            <input type="text" id="appStation" placeholder="예: 신도림역" required>
+                        </div>
+                        <div class="input-group">
+                            <label>탑승 차량 칸번호</label>
+                            <select id="appCarNum" required>
+                                <option value="1">1호차</option><option value="2">2호차</option>
+                                <option value="3">3호차</option><option value="4">4호차</option>
+                                <option value="5">5호차</option><option value="6">6호차</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>빌런 유형</label>
+                        <select id="appType" required>
+                            <option value="">선택해주세요</option>
+                            <option value="고성방가">🔊 고성방가 / 소음</option>
+                            <option value="기인 행동">🤪 기괴한 이상행동</option>
+                            <option value="종교포교">🙏 빌런식 종교포교</option>
+                            <option value="잡상인">🎒 열차 내 이동상인</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label>상세 설명</label>
+                        <textarea id="appDesc" placeholder="인상착의나 구체적 상황을 공유해 피해를 예방해 주세요." required></textarea>
+                    </div>
+
+                    <div class="photo-upload-zone" onclick="document.getElementById('appFile').click()">
+                        📸 현장 증거 사진 첨부
+                        <input type="file" id="appFile" accept="image/*" style="display: none;">
+                        <div class="img-preview-box" id="appPreviewBox">
+                            <img id="appPreviewImg" src="" alt="미리보기">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn">⚡️ 타임라인에 즉시 제보</button>
+                </form>
+            </section>
+        </div>
+
+    </main>
+
+    <nav class="app-nav">
+        <div class="nav-item active" onclick="switchPage('timeline', this)">
+            <div class="nav-icon">🏠</div><div>홈피드</div>
+        </div>
+        <div class="nav-item" onclick="switchPage('report', this)">
+            <div class="nav-icon">📣</div><div>제보하기</div>
+        </div>
+        <div class="nav-item" onclick="alert('준비 중인 기능입니다.')">
+            <div class="nav-icon">📍</div><div>빌런지도</div>
+        </div>
+    </nav>
+
+    <script>
+        let allReports = [];
+        let base64Image = "";
+
+        // 기능 3: 모바일 페이지 전환 스크립트
+        function switchPage(pageId, element) {
+            document.querySelectorAll('.app-page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            if(pageId === 'timeline') document.getElementById('pageTimeline').classList.add('active');
+            if(pageId === 'report') document.getElementById('pageReport').classList.add('active');
+            
+            element.classList.add('active');
+        }
+
+        // 이미지 로더
+        document.getElementById('appFile').addEventListener('change', function() {
+            const file = this.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    base64Image = e.target.result;
+                    document.getElementById('appPreviewImg').setAttribute('src', base64Image);
+                    document.getElementById('appPreviewBox').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 제보 등록
+        document.getElementById('appForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const now = new Date();
+
+            const newReport = {
+                id: Date.now(),
+                station: document.getElementById('appStation').value.trim(),
+                carNum: parseInt(document.getElementById('appCarNum').value),
+                type: document.getElementById('appType').value,
+                desc: document.getElementById('appDesc').value,
+                image: base64Image,
+                time: `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`,
+                warnVote: 0,
+                dangerVote: 0
+            };
+
+            allReports.unshift(newReport);
+            renderFeed(allReports);
+
+            // 초기화 후 피드로 이동
+            this.reset();
+            base64Image = "";
+            document.getElementById('appPreviewBox').style.display = 'none';
+            switchPage('timeline', document.querySelectorAll('.nav-item')[0]);
+        });
+
+        // 피드 렌더링 + 지하철 칸 비주얼라이저 내장 (기능 2)
+        function renderFeed(list) {
+            const feedContainer = document.getElementById('appFeed');
+            document.getElementById('totalCount').innerText = `제보 ${list.length}건`;
+            feedContainer.innerHTML = "";
+
+            list.forEach(report => {
+                const item = document.createElement('div');
+                // 기능 1 기반 실시간 스타일 변경 클래스
+                const isDanger = report.dangerVote > report.warnVote;
+                item.className = `feed-item ${isDanger ? 'level-danger' : ''}`;
+
+                // 열차 칸 시각화 HTML 빌드
+                let trainCarsHtml = "";
+                for(let i=1; i<=6; i++) {
+                    trainCarsHtml += `<div class="train-car ${report.carNum === i ? 'active' : ''}">${i}칸</div>`;
+                }
+
+                item.innerHTML = `
+                    <div class="feed-meta">
+                        <span class="badge-station">📍 1호선 ${report.station}</span>
+                        <span style="color:#64748b;">⏱ ${report.time}</span>
+                    </div>
+                    <div class="feed-tag">⚠️ [위험] ${report.type} 발생</div>
+                    
+                    <div class="train-visual">${trainCarsHtml}</div>
+
+                    <div class="feed-text">${report.desc}</div>
+                    ${report.image ? `<div class="feed-img"><img src="${report.image}"></div>` : ""}
+                    
+                    <div class="vote-box">
+                        <button class="vote-btn" onclick="vote(${report.id}, 'warn', this)">🤨 단순빌런 (${report.warnVote})</button>
+                        <button class="vote-btn" onclick="vote(${report.id}, 'danger', this)">🚨 심각/출동요망 (${report.dangerVote})</button>
+                    </div>
+                `;
+                feedContainer.appendChild(item);
+            });
+        }
+
+        // 기능 1: 실시간 등급 투표 로직
+        function vote(id, type, btn) {
+            const report = allReports.find(r => r.id === id);
+            if(!report) return;
+
+            if(type === 'warn') {
+                report.warnVote++;
+            } else {
+                report.dangerVote++;
+            }
+            renderFeed(allReports);
+        }
+
+        // 검색 기능
+        document.getElementById('searchBar').addEventListener('input', function(e) {
+            const kw = e.target.value.trim().toLowerCase();
+            renderFeed(kw ? allReports.filter(r => r.station.toLowerCase().includes(kw)) : allReports);
+        });
+
+        // 경찰 신고 기능
+        function triggerEmergency() {
+            alert("🚨 긴급 상황 시 붙여넣을 수 있는 112 신고 문구가 클립보드에 복사되었습니다. 즉시 문자로 전송하세요!");
+            navigator.clipboard.writeText("[1호선 긴급신고] 현재 전동차 내부에 안전을 위협하는 인물이 있어 출동을 요청합니다.");
+        }
+
+        // 더미 데이터 초기 세팅
+        allReports.push({
+            id: 1, station: "용산역", carNum: 4, type: "기인 행동",
+            desc: "4호차 바닥에 누워서 지나가는 사람 다리를 붙잡으려고 장난치는 분이 계십니다. 4호차 근처 승객분들 다른 칸으로 대피하세요!!",
+            image: "", time: "12:40", warnVote: 8, dangerVote: 3
+        });
+        renderFeed(allReports);
+    </script>
+</body>
+</html>
